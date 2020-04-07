@@ -1,0 +1,8 @@
+welcome: "Hello, welcome to the mortgage calculator!"
+loan_amount: "Please enter the loan amount:"
+APR: "What is the Annual Percentage Rate?"
+APR_example: "For example, enter 5 for 5%"
+year_loan_duration: "What is the loan duration in years?"
+again: "Would you like to use the mortgage calculator again?"
+again_example: "Please enter yes to continue."
+goodbye: "Thank you for using the mortgage calculator! Goodbye."
