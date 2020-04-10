@@ -34,7 +34,7 @@
 # -input
 #   integer
 # -rules
-#   hash
+#   integer
 
 # 4. Algorithm:
 #   -MINS_PER_HR = 60
