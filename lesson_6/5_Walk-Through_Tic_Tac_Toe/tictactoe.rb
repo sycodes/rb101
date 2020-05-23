@@ -8,8 +8,7 @@ COMPUTER_MARKER = 'O'
 first = ''
 current = ''
 
-player_wins = 0
-computer_wins = 0
+scores = { "player" => 0, "computer" => 0 }
 
 play_again = ''
 
@@ -22,20 +21,20 @@ def welcome
   prompt "The first player to win five rounds wins the game."
 end
 
-def player(first)
-  prompt "Do you want to go first? Please type yes or no: "
-  answer = gets.chomp
+def player_first(first)
+  prompt "Do you want to go first? Please type y or n: "
+  answer = gets.chomp.downcase
 
   loop do
-    if answer == "yes"
+    if answer.start_with?("y")
       first << "player"
       break
-    elsif answer == "no"
+    elsif answer.start_with?("n")
       first << "computer"
       break
     else
-      prompt "That is not a valid answer. Please type yes or no: "
-      answer = gets.chomp
+      prompt "That is not a valid answer. Please type y or n: "
+      answer = gets.chomp.downcase
     end
   end
 end
@@ -106,34 +105,32 @@ def find_at_risk_square(line, board, marker)
   nil
 end
 
-def computer_places_piece!(brd)
+def computer_best_square(brd, marker)
   square = nil
-
   WINNING_LINES.each do |line|
-    square = find_at_risk_square(line, brd, COMPUTER_MARKER)
+    square = find_at_risk_square(line, brd, marker)
     break if square
   end
+  square
+end
 
-  if !square
-    WINNING_LINES.each do |line|
-      square = find_at_risk_square(line, brd, PLAYER_MARKER)
-      break if square
-    end
-  end
-
+def computer_places_piece!(brd)
+  square = computer_best_square(brd, COMPUTER_MARKER)
+  square = computer_best_square(brd, PLAYER_MARKER) if !square
   square = 5 if brd[5] == INITIAL_MARKER
-
   square = empty_squares(brd).sample if !square
-
   brd[square] = COMPUTER_MARKER
 end
 
-def player_places_piece!(brd)
+def player_places_piece!(brd) # => player inputs integers only
   square = ''
   loop do
     prompt "Choose a square (#{joinor(empty_squares(brd))}):"
-    square = gets.chomp.to_i
-    break if empty_squares(brd).include?(square)
+    square = gets.chomp
+    if empty_squares(brd).include?(square.to_i) && square.to_i.to_s == square
+      square = square.to_i
+      break
+    end
     prompt "Sorry, that's not a valid choice."
   end
   brd[square] = PLAYER_MARKER
@@ -150,23 +147,38 @@ end
 def detect_winner(brd)
   WINNING_LINES.each do |line|
     if brd.values_at(*line).count(PLAYER_MARKER) == 3
-      return "Player"
+      return "player"
     elsif brd.values_at(*line).count(COMPUTER_MARKER) == 3
-      return "Computer"
+      return "computer"
     end
   end
   nil
 end
 
-def total_count(player_wins, computer_wins)
-  prompt "Player won #{player_wins} times. Computer won #{computer_wins} times."
+def total_count(scores)
+  prompt "Player won #{scores['player']} times."
+  prompt "Computer won #{scores['computer']} times."
 end
 
-def winner(player)
-  if player == 5
+def winner(scores)
+  if scores["player"] == 5
     "Player"
-  else
+  elsif scores["computer"] == 5
     "Computer"
+  end
+end
+
+def update_scores(winner, scores)
+  if winner == "player" || winner == "computer"
+    scores[winner] += 1
+  end
+end
+
+def grand_winner(scores)
+  if scores["player"] == 5 || scores["computer"] == 5
+    true
+  else
+    false
   end
 end
 
@@ -174,7 +186,7 @@ end
 
 loop do
   welcome
-  player(first)
+  player_first(first)
   current = first
 
   loop do
@@ -191,18 +203,15 @@ loop do
       display_board(board)
 
       if someone_won?(board)
-        prompt "#{detect_winner(board)} wins!"
-      end
-
-      if detect_winner(board) == "Player"
-        player_wins += 1
-      elsif detect_winner(board) == "Computer"
-        computer_wins += 1
+        prompt "#{detect_winner(board).capitalize} wins!"
       else
         prompt "It's a tie!"
       end
 
-      total_count(player_wins, computer_wins)
+      winner = detect_winner(board)
+      update_scores(winner, scores)
+
+      total_count(scores)
 
       current = first
 
@@ -212,13 +221,14 @@ loop do
       break if continue
     end
 
-    if player_wins == 5 || computer_wins == 5
-      prompt "#{winner(player_wins)} is the final winner!"
+    if grand_winner(scores)
+      system 'clear'
+      prompt "#{winner(scores)} is the final winner!"
       loop do
-        prompt "Play again? Please type yes or no: "
-        play_again = gets.chomp
+        prompt "Play again? Please type y or n: "
+        play_again = gets.chomp.downcase
         break if play_again.start_with?("y", "n")
-        prompt "Sory, that is not a valid choice."
+        prompt "Sorry, that is not a valid choice."
       end
     end
 
@@ -228,9 +238,8 @@ loop do
       current = ''
       first = ''
       play_again = ''
-      player_wins = 0
-      computer_wins = 0
-      player(first)
+      scores = { "player" => 0, "computer" => 0 }
+      player_first(first)
       current = first
       next
     end
