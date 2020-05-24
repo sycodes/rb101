@@ -1,5 +1,3 @@
-require 'pry'
-
 WINNING_NUM = 21
 DEALER_STAYS = 17
 
@@ -129,7 +127,7 @@ loop do
   dealer_total = total(dealer_cards)
 
   answer = nil
-  loop do # player's turn
+  loop do
     prompt("Would you pick h(it) or s(tay)?")
     answer = gets.chomp
 
